@@ -89,6 +89,11 @@ export const API_ENDPOINTS = {
   adminEnrollments: '/v1/admin/enrollments',
   adminEnrollment: (id: string) => `/v1/admin/enrollments/${encodeURIComponent(id)}`,
   adminEnrollmentStatus: (id: string) => `/v1/admin/enrollments/${encodeURIComponent(id)}/status`,
+  // Notifications (Bearer, the caller's own)
+  notifications: '/v1/notifications',
+  notificationsUnreadCount: '/v1/notifications/unread-count',
+  notificationRead: (id: string) => `/v1/notifications/${encodeURIComponent(id)}/read`,
+  notificationsReadAll: '/v1/notifications/read-all',
 } as const;
 
 /* ================================ Common ================================ */
@@ -246,8 +251,24 @@ export type MyEnrollmentRef = {
   reviewNote: string | null;
   reviewedAt: IsoDate | null;
   hasReceipt: boolean;
+  /** completedLessons / totalLessons * 100, 1 decimal (see ProgramProgress). */
   progressPct: number;
+  completedLessons: number;
+  totalLessons: number;
   createdAt: IsoDate;
+};
+
+/**
+ * Progress in a program. Counted lessons: mandatory lessons the student can see (QUIZ and
+ * ASSIGNMENT lessons only once published). A lesson is done when the video was watched
+ * (90%) or marked done, the reading was marked done, the quiz was passed, or the
+ * assignment was graded.
+ */
+export type ProgramProgress = {
+  completedLessons: number;
+  totalLessons: number;
+  /** 0 to 100, 1 decimal; 0 when the program has no counted lessons. */
+  percent: number;
 };
 
 export type ProgramNodeVideo = {
@@ -277,6 +298,8 @@ export type ProgramNode = {
   isMandatory: boolean;
   /** true when the caller cannot open this lesson yet. */
   isLocked: boolean;
+  /** The signed-in learner completed this lesson (always false when anonymous or staff). */
+  isCompleted: boolean;
   video: ProgramNodeVideo | null;
   assignment: ProgramNodeAssignment | null;
 };
@@ -542,7 +565,10 @@ export type AdminEnrollmentUser = {
 export type AdminEnrollmentListItem = {
   id: string;
   status: EnrollmentStatus;
+  /** Current progress (ProgramProgress.percent). */
   progressPct: number;
+  completedLessons: number;
+  totalLessons: number;
   hasReceipt: boolean;
   reviewNote: string | null;
   reviewedAt: IsoDate | null;
@@ -606,6 +632,53 @@ export function canAccessContent(status: EnrollmentStatus | null | undefined): b
 export function canApply(status: EnrollmentStatus | null | undefined): boolean {
   return !status || status === 'REJECTED' || status === 'DROPPED';
 }
+
+/* ============================= Notifications ============================ */
+
+/**
+ * GRADED: a reviewer graded, rejected or asked to revise a hand-in.
+ * ENROLLMENT: an admin accepted, rejected, suspended, completed or removed an enrollment.
+ * NEW_ASSIGNMENT: an assignment was published in one of the learner's programs.
+ * SYSTEM, ANNOUNCEMENT, ASSIGNMENT_DUE: reserved (not sent yet).
+ */
+export type NotificationType = 'SYSTEM' | 'ASSIGNMENT_DUE' | 'GRADED' | 'ANNOUNCEMENT' | 'ENROLLMENT' | 'NEW_ASSIGNMENT';
+
+export type AppNotification = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  /**
+   * Where the notification leads, as a resource path the app maps to its own screen:
+   *  - `/assignments/<assignmentId>`
+   *  - `/programs/<slug>`
+   * null when there is nothing to open.
+   */
+  actionUrl: string | null;
+  createdAt: IsoDate;
+};
+
+/** GET /v1/notifications?page=&pageSize=&unreadOnly= (newest first). */
+export type NotificationListQuery = {
+  /** Default 1 */
+  page?: number;
+  /** Default 20, max 50 */
+  pageSize?: number;
+  /** Default false */
+  unreadOnly?: boolean;
+};
+
+export type NotificationList = Paginated<AppNotification> & {
+  /** All unread notifications of the user (not only this page). */
+  unreadCount: number;
+};
+
+/** GET /v1/notifications/unread-count (cheap, for the bell badge). */
+export type UnreadCount = { unreadCount: number };
+
+/** POST /v1/notifications/read-all */
+export type ReadAllResult = { updated: number; unreadCount: 0 };
 
 /* ================================ Labels ================================ */
 
