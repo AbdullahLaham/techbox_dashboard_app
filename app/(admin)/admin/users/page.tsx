@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { Users } from 'lucide-react';
-import { ComingSoon } from '@/components/layout/coming-soon';
+import { UsersDirectory } from '@/components/users/admin/users-directory';
 
-export const metadata: Metadata = { title: 'الطلاب والموجّهون' };
+export const metadata: Metadata = { title: 'المستخدمون والصلاحيات' };
 
-export default function Page() {
-  return <ComingSoon icon={Users} title="الطلاب والموجّهون" description="إدارة المستخدمين والأدوار والدعوات قيد التطوير." backHref="/admin/overview" backLabel="العودة للوحة التحكم" />;
+export default function AdminUsersPage() {
+  return <UsersDirectory />;
 }

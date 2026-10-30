@@ -56,7 +56,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
     title: 'الحاضنة',
     items: [
       { title: 'الشركات الناشئة والمشاريع', href: '/admin/startups', icon: FolderKanban },
-      { title: 'الطلاب والموجّهون', href: '/admin/users', icon: Users },
+      { title: 'المستخدمون والصلاحيات', href: '/admin/users', icon: Users },
     ],
   },
   {
@@ -128,7 +128,7 @@ export const ADMIN_QUICK_ACTIONS: readonly QuickAction[] = [
   { title: 'واجب جديد', description: 'أنشئ واجباً وأرفق ملفات التعليمات', href: '/admin/assignments/new', icon: ClipboardList },
   { title: 'قائمة التقييم', description: 'راجع التسليمات المعلقة', href: '/admin/grading', icon: FileCheck },
   { title: 'متابعة الشركات', description: 'حدّث مراحل المشاريع الناشئة', href: '/admin/startups', icon: FolderKanban },
-  { title: 'إدارة المستخدمين', description: 'ادعُ موجّهين وأسند الأدوار', href: '/admin/users', icon: Users },
+  { title: 'إدارة المستخدمين', description: 'أنشئ حسابات الفريق وأسند الأدوار', href: '/admin/users', icon: Users },
   { title: 'إعدادات المنصة', description: 'الصلاحيات والتكاملات', href: '/admin/settings', icon: Settings },
 ];
 
