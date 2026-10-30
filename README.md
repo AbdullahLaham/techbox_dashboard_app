@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TechBox web app: admin dashboard and learner pages
 
-## Getting Started
+Next.js app for the TechBox learning and incubator platform. One app, two areas:
 
-First, run the development server:
+| Area | Routes | For |
+|------|--------|-----|
+| Admin dashboard | `/admin/*` | Staff: programs and curriculum, lessons and quizzes, assignments, grading, enrollment review |
+| Learner pages | `/dashboard`, `/programs`, `/assignments`, … | Students: catalog, classroom (lessons, quizzes, progress), applying, hand-ins, notifications |
+
+Backend: `techbox_backend_nestjs` (NestJS API). Every endpoint used here is documented in the backend's `api-contract-admin.md`.
+
+## Requirements
+
+- Node.js 24
+- The backend running (default `http://localhost:5000`)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in with an account created by the backend's `npm run seed` (owner / incubator manager) or a student registered from the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+In production the backend must list this app's URL in its `CORS_ORIGINS`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Development server |
+| `npm run build` / `npm start` | Production build / serve |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit` | Typecheck |
 
-To learn more about Next.js, take a look at the following resources:
+CI (`.github/workflows/ci.yml`) runs typecheck, lint and build on every push and pull request.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/(admin)/admin/   admin pages (content, lessons, assignments, grading, enrollments, …)
+app/(client)/        learner pages
+app/(auth)/          login, register
+components/          UI by feature (admin, lessons, submissions, notifications, …)
+services/            API calls (one file per backend area)
+hooks/               React Query hooks
+lib/                 auth/RBAC rules, error messages, formatting
+types/               *.contract.ts copied from the backend (do not edit), app types
+proxy.ts             route guard (role-based redirects)
+```
 
-## Deploy on Vercel
+## API contracts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`types/api.contract.ts`, `assignments*.contract.ts`, `nodes.contract.ts` and `submissions.contract.ts` are copies of the backend's `src/types/`. When the backend changes them, copy them again; never edit them here. Errors from the API are turned into Arabic messages by `lib/api-error.ts`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Auth
+
+The access token is sent as `Authorization: Bearer`; on `401` the client refreshes once with the single-use refresh token (`services/auth-service.ts`) and signs out if the refresh is rejected. Route access per role is defined in `lib/auth/rbac.ts` and enforced by `proxy.ts` and the client guard.
