@@ -1,7 +1,7 @@
 // lib/mocks/dashboard.ts
 // Fixtures for the dashboard endpoints until the backend ships them. Timestamps are
 // generated relative to "now" so relative labels ("منذ ساعتين", "غداً") stay meaningful.
-import { NodeType, ProgramType } from '@/types/program';
+import { NodeType } from '@/types/program';
 import {
   DeadlineStatus,
   StartupStage,
@@ -54,40 +54,6 @@ export function buildLearnerOverviewMock(): LearnerOverview {
       streakDays: 6,
       weekly: weeklyMinutes.map((minutes, i) => ({ date: at(-(weeklyMinutes.length - 1 - i) * DAY), minutes })),
     },
-    programs: [
-      {
-        id: 'p1',
-        slug: 'startup-valuation',
-        title: 'تقييم الشركات الناشئة وعقود SAFE',
-        type: ProgramType.INCUBATOR_BATCH,
-        instructorName: 'م. أليكس فانس',
-        progress: 65,
-        completedLessons: 13,
-        totalLessons: 20,
-        nextLesson: { title: 'الأسهم القابلة للتحويل مقابل الجولات المسعّرة', type: NodeType.VIDEO_LECTURE },
-      },
-      {
-        id: 'p2',
-        slug: 'fullstack-architecture',
-        title: 'هندسة التطبيقات المتكاملة Next.js و NestJS',
-        type: ProgramType.BOOTCAMP,
-        instructorName: 'د. رامي',
-        progress: 40,
-        completedLessons: 8,
-        totalLessons: 20,
-        nextLesson: { title: 'الصلاحيات المتقدمة وترحيل قواعد البيانات', type: NodeType.LIVE_SESSION },
-      },
-      {
-        id: 'p3',
-        slug: 'pitching-masterclass',
-        title: 'فن العرض أمام المستثمرين',
-        type: ProgramType.WORKSHOP_SERIES,
-        instructorName: 'أ. هالة',
-        progress: 100,
-        completedLessons: 6,
-        totalLessons: 6,
-      },
-    ],
     deadlines: [
       {
         id: 'd1',

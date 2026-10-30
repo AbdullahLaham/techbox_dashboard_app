@@ -3,14 +3,37 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { PlayCircle, FileText, Loader2, Video, ArrowRight, Lock, Clock, XCircle, CheckCircle2, ExternalLink } from 'lucide-react';
+import {
+  PlayCircle,
+  FileText,
+  Loader2,
+  Video,
+  ArrowRight,
+  Lock,
+  Clock,
+  XCircle,
+  CheckCircle2,
+  ListChecks,
+  ClipboardList,
+  type LucideIcon,
+} from 'lucide-react';
 import { useProgramDetail } from '@/hooks/use-programs';
 import { useClassroomStore } from '@/store/use-classroom-store';
 import { useAuthStore } from '@/store/use-auth-store';
 import { EnrollmentApplyDialog } from '@/components/programs/enrollment-apply-dialog';
+import { LessonView } from '@/components/lessons/student/lesson-view';
+import { Progress } from '@/components/ui/progress';
 import { buildLoginUrl } from '@/lib/auth/rbac';
-import { NodeType, type PublicNode, type PublicProgram } from '@/types/program';
-import { NODE_TYPE_LABELS_AR, canApply, type EnrollmentBlockReason } from '@/types/api.contract';
+import { formatNumber, formatPercent } from '@/lib/format';
+import { type NodeType, type PublicProgram } from '@/types/program';
+import { canApply, type EnrollmentBlockReason, type MyEnrollmentRef } from '@/types/api.contract';
+
+const NODE_ICONS: Partial<Record<NodeType, { icon: LucideIcon; className: string }>> = {
+  VIDEO_LECTURE: { icon: Video, className: 'text-blue-500' },
+  QUIZ: { icon: ListChecks, className: 'text-violet-500' },
+  ASSIGNMENT: { icon: ClipboardList, className: 'text-emerald-600' },
+};
+const DEFAULT_NODE_ICON = { icon: FileText, className: 'text-amber-500' };
 
 const BLOCK_REASON_TEXT: Record<EnrollmentBlockReason, string> = {
   NOT_AVAILABLE: 'هذا البرنامج لا يستقبل طلبات حالياً.',
@@ -52,6 +75,9 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
   const nodes = program.tracks.flatMap((t) => t.modules.flatMap((m) => m.nodes));
   // Only a lesson of this program counts (the store outlives the page).
   const activeNode = nodes.find((n) => n.id === activeNodeId) ?? null;
+  const enrollment = program.myEnrollment;
+  // The server saves progress for ACTIVE and COMPLETED enrollments only (staff previews are not saved).
+  const canRecord = program.canAccessContent && (enrollment?.status === 'ACTIVE' || enrollment?.status === 'COMPLETED');
 
   return (
     <div className="space-y-6 pb-10">
@@ -71,7 +97,7 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
       <div className="grid lg:grid-cols-4 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
           {activeNode ? (
-            <LessonView node={activeNode} />
+            <LessonView key={activeNode.id} node={activeNode} programSlug={program.slug} canRecord={canRecord} />
           ) : (
             <div className="flex flex-col items-center justify-center h-96 rounded-3xl border border-dashed p-8 text-center bg-card">
               <PlayCircle className="h-12 w-12 text-gold mb-3" />
@@ -84,6 +110,7 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
         {/* شجرة المنهج الجانبية */}
         <div className="rounded-3xl border bg-card p-5 shadow-sm space-y-4 sticky top-28">
           <h3 className="font-extrabold text-sm border-b pb-3 text-foreground">محتويات المنهج الدراسي</h3>
+          {canRecord && enrollment && <ProgramProgressBar enrollment={enrollment} />}
           <div className="space-y-5 max-h-[65vh] overflow-y-auto pl-1">
             {program.tracks.map((track, trackIdx) => (
               <div key={track.id} className="space-y-2.5">
@@ -99,10 +126,12 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
                       <div className="space-y-1 pr-2">
                         {mod.nodes.map((node) => {
                           const isSelected = activeNode?.id === node.id;
+                          const { icon: Icon, className: iconClass } = NODE_ICONS[node.type] ?? DEFAULT_NODE_ICON;
                           return (
                             <button
                               key={node.id}
                               onClick={() => setActiveNodeId(node.id)}
+                              aria-current={isSelected ? 'true' : undefined}
                               className={`w-full flex items-center justify-between gap-2 p-2.5 rounded-xl text-xs text-right transition-all ${
                                 isSelected
                                   ? 'bg-navy-900 text-white dark:bg-gold dark:text-navy-900 font-bold shadow-sm'
@@ -110,14 +139,17 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
                               }`}
                             >
                               <span className="flex items-center gap-2 truncate">
-                                {node.type === NodeType.VIDEO_LECTURE ? (
-                                  <Video className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-gold dark:text-navy-900' : 'text-blue-500'}`} />
-                                ) : (
-                                  <FileText className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-gold dark:text-navy-900' : 'text-amber-500'}`} />
-                                )}
+                                <Icon className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-gold dark:text-navy-900' : iconClass}`} aria-hidden />
                                 <span className="truncate">{node.title}</span>
                               </span>
-                              {node.isLocked && <Lock className="h-3 w-3 shrink-0 opacity-60" aria-label="مقفل" />}
+                              {node.isLocked ? (
+                                <Lock className="h-3 w-3 shrink-0 opacity-60" aria-label="مقفل" />
+                              ) : node.isCompleted ? (
+                                <CheckCircle2
+                                  className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-emerald-300 dark:text-emerald-700' : 'text-emerald-500'}`}
+                                  aria-label="مكتمل"
+                                />
+                              ) : null}
                             </button>
                           );
                         })}
@@ -134,51 +166,17 @@ export default function ProgramClassroomPage({ params }: { params: Promise<{ slu
   );
 }
 
-function LessonView({ node }: { node: PublicNode }) {
+function ProgramProgressBar({ enrollment }: { enrollment: MyEnrollmentRef }) {
+  const pct = enrollment.progressPct;
   return (
-    <div className="rounded-3xl border bg-card p-6 shadow-sm space-y-6">
-      <div className="space-y-2 border-b pb-4">
-        <span className="text-[10px] font-bold text-gold uppercase tracking-wider bg-gold/10 px-2.5 py-1 rounded-full border border-gold/20 inline-block">
-          {NODE_TYPE_LABELS_AR[node.type]}
+    <div className="space-y-1.5 rounded-xl bg-muted/40 p-3">
+      <div className="flex justify-between text-[11px]">
+        <span className="text-muted-foreground">
+          {formatNumber(enrollment.completedLessons)} من {formatNumber(enrollment.totalLessons)} درساً
         </span>
-        <h2 className="text-xl font-bold text-foreground">{node.title}</h2>
-        {node.description && <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{node.description}</p>}
+        <bdi className="font-bold text-foreground tabular-nums">{formatPercent(pct, Number.isInteger(pct) ? 0 : 1)}</bdi>
       </div>
-
-      {node.isLocked ? (
-        <div className="flex flex-col items-center gap-2 rounded-2xl bg-muted/40 p-10 text-center">
-          <Lock className="h-8 w-8 text-gold" />
-          <p className="text-sm font-bold text-foreground">هذا الدرس متاح للطلاب المقبولين في البرنامج</p>
-          <p className="text-xs text-muted-foreground">قدّم طلب الانضمام، وسيُفتح المحتوى بعد موافقة فريق الحاضنة.</p>
-        </div>
-      ) : (
-        <>
-          {node.video?.playbackUrl && (
-            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-border shadow-md">
-              <iframe
-                src={node.video.playbackUrl}
-                title={node.title}
-                className="w-full h-full"
-                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                allowFullScreen
-              />
-            </div>
-          )}
-
-          {node.assignment && (
-            <div className="rounded-2xl bg-muted/40 p-6 space-y-4 border border-border">
-              <h3 className="font-bold text-sm text-foreground">تعليمات المهمة المطلوبة:</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{node.assignment.instructions}</p>
-              <Link
-                href={`/assignments/${node.assignment.id}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-gold text-navy-900 px-5 py-2.5 text-xs font-bold shadow-md hover:bg-gold/90 transition-all"
-              >
-                <ExternalLink className="h-3.5 w-3.5" /> فتح الواجب والملفات المرفقة
-              </Link>
-            </div>
-          )}
-        </>
-      )}
+      <Progress value={pct} label="تقدّمك في البرنامج" indicatorClassName={pct >= 100 ? 'bg-emerald-500' : undefined} />
     </div>
   );
 }

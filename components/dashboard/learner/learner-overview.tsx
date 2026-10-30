@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Activity, CheckCircle2, Clock, GraduationCap } from 'lucide-react';
 import { useLearnerOverview } from '@/hooks/use-dashboard';
+import { useMyEnrollments } from '@/hooks/use-enrollments';
 import { useSession } from '@/hooks/use-session';
 import { KpiCard } from '@/components/dashboard/shared/kpi-card';
 import { Section } from '@/components/dashboard/shared/section';
@@ -12,17 +13,21 @@ import { DeadlineStatus, type KpiMetric, type LearnerOverview as LearnerOverview
 import { daysUntil } from '@/lib/format';
 import { WelcomeBanner } from './welcome-banner';
 import { ActivityRateCard } from './activity-rate-card';
-import { EnrolledPrograms } from './enrolled-programs';
+import { EnrolledPrograms, isEnrollmentFinished } from './enrolled-programs';
+import type { MyEnrollment } from '@/types/api.contract';
 import { UpcomingDeadlines } from './upcoming-deadlines';
 
-function buildLearnerKpis(data: LearnerOverviewData, now: number): KpiMetric[] {
-  const active = data.programs.filter((p) => p.progress < 100).length;
-  const completedLessons = data.programs.reduce((sum, p) => sum + p.completedLessons, 0);
+/** Programs and lessons come from the learner's enrollments; deadlines and activity are still fixtures. */
+function buildLearnerKpis(data: LearnerOverviewData, enrollments: readonly MyEnrollment[], now: number): KpiMetric[] {
+  const withAccess = enrollments.filter((e) => e.status === 'ACTIVE' || e.status === 'COMPLETED');
+  const finished = withAccess.filter(isEnrollmentFinished).length;
+  const active = withAccess.length - finished;
+  const completedLessons = withAccess.reduce((sum, e) => sum + e.completedLessons, 0);
   const open = data.deadlines.filter((d) => d.status !== DeadlineStatus.SUBMITTED);
   const dueThisWeek = open.filter((d) => daysUntil(d.dueAt, now) <= 7).length;
 
   return [
-    { id: 'programs', label: 'البرامج النشطة', value: active, format: 'number', delta: data.programs.length - active, deltaLabel: 'برنامج مكتمل' },
+    { id: 'programs', label: 'البرامج النشطة', value: active, format: 'number', delta: finished, deltaLabel: 'برنامج مكتمل' },
     { id: 'pending', label: 'مهام بانتظار التسليم', value: open.length, format: 'number', delta: dueThisWeek, deltaLabel: 'تستحق هذا الأسبوع', higherIsBetter: false },
     { id: 'lessons', label: 'الدروس المكتملة', value: completedLessons, format: 'number', deltaLabel: 'عبر جميع البرامج' },
     { id: 'activity', label: 'معدل النشاط', value: data.activity.rate, format: 'percent', delta: data.activity.rate - data.activity.previousRate, deltaLabel: 'عن الشهر الماضي' },
@@ -37,15 +42,26 @@ const KPI_ICONS = {
 } as const;
 
 export function LearnerOverview() {
-  const { data, isPending, isError, refetch } = useLearnerOverview();
+  const overview = useLearnerOverview();
+  const enrollments = useMyEnrollments();
   const { user } = useSession();
   // Frozen per mount so greetings, relative dates and urgency badges stay consistent.
   const [now] = useState(() => Date.now());
 
-  if (isPending) return <DashboardSkeleton />;
-  if (isError) return <DashboardError onRetry={() => void refetch()} />;
+  if (overview.isPending || enrollments.isPending) return <DashboardSkeleton />;
+  if (overview.isError || enrollments.isError) {
+    return (
+      <DashboardError
+        onRetry={() => {
+          if (overview.isError) void overview.refetch();
+          if (enrollments.isError) void enrollments.refetch();
+        }}
+      />
+    );
+  }
 
-  const kpis = buildLearnerKpis(data, now);
+  const data = overview.data;
+  const kpis = buildLearnerKpis(data, enrollments.data, now);
 
   return (
     <div className="space-y-8 pb-10">
@@ -64,7 +80,7 @@ export function LearnerOverview() {
           action={{ label: 'كل البرامج', href: '/programs' }}
           className="lg:col-span-2"
         >
-          <EnrolledPrograms programs={data.programs} />
+          <EnrolledPrograms enrollments={enrollments.data} />
         </Section>
 
         <div className="space-y-8">

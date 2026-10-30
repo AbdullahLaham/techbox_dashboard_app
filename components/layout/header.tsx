@@ -3,10 +3,11 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell, Menu, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { findActiveNavItem } from '@/config/navigation';
 import { useSession } from '@/hooks/use-session';
 import { useUiStore } from '@/store/use-ui-store';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { UserAvatar } from './user-avatar';
 
 export function AppHeader() {
@@ -36,15 +37,7 @@ export function AppHeader() {
 
       {/* ms-auto pushes the tool cluster to the inline-end edge (left in RTL) */}
       <div className="ms-auto flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="الإشعارات (يوجد جديد)"
-          className="relative rounded-2xl border border-border bg-background p-2.5 text-muted-foreground transition-colors hover:border-gold/50 hover:text-foreground"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute end-2 top-2 h-2 w-2 animate-ping rounded-full bg-gold" aria-hidden />
-          <span className="absolute end-2 top-2 h-2 w-2 rounded-full bg-gold" aria-hidden />
-        </button>
+        {user && <NotificationBell />}
 
         {user && (
           <div className="flex items-center gap-3 border-s border-border ps-3">

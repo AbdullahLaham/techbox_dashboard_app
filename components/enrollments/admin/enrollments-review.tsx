@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatNumber, formatShortDate } from '@/lib/format';
 import { EnrollmentStatusBadge } from './enrollment-status-badge';
 import { EnrollmentReviewPanel } from './enrollment-review-panel';
+import { EnrollmentProgress } from './enrollment-progress';
 import {
   ENROLLMENT_STATUSES,
   ENROLLMENT_STATUS_LABELS_AR,
@@ -127,6 +128,7 @@ export function EnrollmentsReview({ initialProgramId, initialStatus }: Enrollmen
                 <th className="p-4 font-semibold">المتقدم</th>
                 <th className="p-4 font-semibold">البرنامج</th>
                 <th className="p-4 font-semibold">الحالة</th>
+                <th className="p-4 font-semibold">التقدّم</th>
                 <th className="p-4 font-semibold">تاريخ التقديم</th>
                 <th className="p-4 font-semibold">الإيصال</th>
               </tr>
@@ -149,6 +151,9 @@ export function EnrollmentsReview({ initialProgramId, initialStatus }: Enrollmen
                   <td className="p-4 text-xs">{item.program.title}</td>
                   <td className="p-4">
                     <EnrollmentStatusBadge status={item.status} />
+                  </td>
+                  <td className="p-4">
+                    <EnrollmentProgress enrollment={item} compact />
                   </td>
                   <td className="p-4 text-xs text-muted-foreground">{formatShortDate(item.createdAt)}</td>
                   <td className="p-4 text-xs">

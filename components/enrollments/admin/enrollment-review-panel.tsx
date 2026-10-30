@@ -7,6 +7,7 @@ import { useAdminEnrollment, useChangeEnrollmentStatus } from '@/hooks/use-enrol
 import { getApiErrorMessage } from '@/lib/api-error';
 import { formatDateTime } from '@/lib/assignment-format';
 import { EnrollmentStatusBadge } from './enrollment-status-badge';
+import { EnrollmentProgress } from './enrollment-progress';
 import { ENROLLMENT_STATUS_TRANSITIONS, type EnrollmentStatus } from '@/types/api.contract';
 
 /** Button text and style for each target status. */
@@ -85,6 +86,13 @@ function Panel({ enrollmentId, onClose }: { enrollmentId: string; onClose: () =>
               <p className="text-sm font-bold text-foreground">{data.program.title}</p>
               {data.program.maxSeats !== null && <p className="text-xs text-muted-foreground">سعة الدفعة: {data.program.maxSeats} مقعداً</p>}
             </div>
+
+            {data.status !== 'PENDING' && data.status !== 'REJECTED' && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-foreground">التقدّم في البرنامج</h3>
+                <EnrollmentProgress enrollment={data} />
+              </div>
+            )}
 
             <dl className="grid grid-cols-3 gap-x-3 gap-y-2 rounded-2xl border bg-muted/20 p-4 text-xs">
               <Field label="الاسم بالعربية" value={data.user.fullNameAr} />

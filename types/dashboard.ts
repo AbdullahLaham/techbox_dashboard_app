@@ -1,5 +1,5 @@
 // types/dashboard.ts
-import type { NodeType, ProgramType } from './program';
+import type { NodeType } from './program';
 
 /** ISO-8601 timestamp string as returned by the API. */
 export type IsoDateString = string;
@@ -68,19 +68,6 @@ export interface ActivitySummary {
   weekly: DailyActivity[];
 }
 
-export interface EnrolledProgram {
-  id: string;
-  slug: string;
-  title: string;
-  type: ProgramType;
-  instructorName: string;
-  /** 0–100 */
-  progress: number;
-  completedLessons: number;
-  totalLessons: number;
-  nextLesson?: { title: string; type: NodeType };
-}
-
 export enum DeadlineStatus {
   NOT_STARTED = 'NOT_STARTED',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -105,7 +92,6 @@ export interface LearnerStartupSnapshot {
 
 export interface LearnerOverview {
   activity: ActivitySummary;
-  programs: EnrolledProgram[];
   deadlines: UpcomingDeadline[];
   startup?: LearnerStartupSnapshot;
 }

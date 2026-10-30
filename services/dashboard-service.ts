@@ -6,6 +6,8 @@ import type { AdminOverview, LearnerOverview } from '@/types/dashboard';
 /**
  * The aggregate dashboard endpoints are not live on the backend yet. Until they are,
  * typed fixtures are served. Set NEXT_PUBLIC_DASHBOARD_MOCKS=false to hit the API.
+ * The learner's programs and lesson progress are real already: they come from
+ * GET /v1/enrollments/my-enrollments (useMyEnrollments), not from this overview.
  */
 const USE_MOCKS = process.env.NEXT_PUBLIC_DASHBOARD_MOCKS !== 'false';
 
