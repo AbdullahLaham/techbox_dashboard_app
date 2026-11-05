@@ -164,10 +164,11 @@ export function resolveRouteAccess(
       : { type: 'allow' };
   }
 
+  // "/" is the public landing page; signed-in users go straight to their home.
   if (pathname === '/') {
     return session.authenticated && session.role
       ? { type: 'home', redirectTo: getHomeRoute(session.role) }
-      : { type: 'login', redirectTo: LOGIN_ROUTE };
+      : { type: 'allow' };
   }
 
   if (!isProtectedRoute(pathname)) return { type: 'allow' };

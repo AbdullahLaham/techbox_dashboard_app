@@ -107,8 +107,9 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     if (redirectTo && redirectTo !== currentUrl) router.replace(redirectTo);
   }, [redirectTo, currentUrl, router]);
 
-  // Pages that need a verdict before rendering; public pages render immediately.
-  const gated = isProtectedRoute(pathname) || pathname === '/' || (isAuthRoute(pathname) && !!accessToken);
+  // Pages that need a verdict before rendering; public pages (including the "/" landing page,
+  // so it server-renders) render immediately and redirect signed-in users once verified.
+  const gated = isProtectedRoute(pathname) || (isAuthRoute(pathname) && !!accessToken);
 
   if (redirectTo) return <SessionLoadingScreen label="جارٍ تحويلك…" />;
   if (gated && status === 'pending') return <SessionLoadingScreen />;

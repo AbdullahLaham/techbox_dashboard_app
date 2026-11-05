@@ -21,6 +21,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setMobileNavOpen(false);
   }, [pathname, setMobileNavOpen]);
 
+  // صفحة الهبوط تحمل رأسها وتذييلها الخاصين
+  if (pathname === '/') return <>{children}</>;
+
   // صفحات الدخول والتسجيل تعرض بدون الشريط الجانبي والهيدر
   if (isAuthRoute(pathname)) {
     return <main className="min-h-screen bg-background">{children}</main>;
