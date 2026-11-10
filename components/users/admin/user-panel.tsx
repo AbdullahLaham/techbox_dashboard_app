@@ -76,7 +76,7 @@ function Panel({ userId, onClose }: { userId: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-start bg-black/40 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-start bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <aside
         role="dialog"
         aria-modal="true"
