@@ -4,6 +4,7 @@ import { ArrowUpLeft, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { JOURNEY, PROGRAMS, type ProgramOffer } from './content';
 import { GlowCard } from './glow-card';
+import { OpenPrograms } from './open-programs';
 import { Reveal } from './reveal';
 import { BAND, CONTAINER, SectionHeader } from './section-header';
 
@@ -67,6 +68,8 @@ export function ProgramsSection() {
             </GlowCard>
           </Reveal>
         </div>
+
+        <OpenPrograms />
       </div>
     </section>
   );

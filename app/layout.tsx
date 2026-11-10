@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className="bg-background font-sans text-foreground antialiased selection:bg-gold selection:text-navy-900">
         <QueryProvider>
-          {/* AuthGuardProvider reads usePathname/useSearchParams, so it must sit inside Suspense */}
+          {/* Catches any page that suspends; AuthGuardProvider itself must not, or public pages lose their HTML */}
           <Suspense fallback={<SessionLoadingScreen />}>
             <AuthGuardProvider>
               <AppShell>{children}</AppShell>

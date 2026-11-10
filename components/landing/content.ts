@@ -3,7 +3,7 @@
 //
 // Brand facts come from the public Instagram profile @tech_.box (bio: "Empowering Future
 // Tech Talent · Training • Real Projects • Career Growth"; highlights: courses, workshops,
-// talented kids, graduation).
+// graduation). TechBox presents itself here as an incubator; kids' programs are not offered.
 //
 // ⚠️ TODO(verify): apart from the follower count, IMPACT_STATS and SUCCESS_STORIES are
 // illustrative placeholders, not TechBox's real figures or graduates. Replace them with
@@ -52,7 +52,7 @@ export const ABOUT = {
     {
       icon: GraduationCap,
       title: 'تدريب عملي',
-      description: 'دورات وورش عمل يقودها مدرّبون، من الأساسيات حتى مهارات سوق العمل، للكبار وللأطفال الموهوبين.',
+      description: 'دورات وورش عمل يقودها مدرّبون، من الأساسيات حتى مهارات سوق العمل.',
     },
     {
       icon: Hammer,
@@ -69,7 +69,6 @@ export const ABOUT = {
   highlights: [
     'دورات تدريبية',
     'ورش عمل',
-    'برامج الأطفال الموهوبين',
     'مشاريع حقيقية',
     'معسكرات برمجة',
     'إرشاد مهني',
@@ -115,7 +114,7 @@ export const JOURNEY: readonly PipelineStage[] = [
 ];
 
 export const PIPELINE = {
-  eyebrow: 'مسرّعة TechBox',
+  eyebrow: 'حاضنة TechBox',
   title: 'خمس محطات من الفكرة إلى الاستثمار',
   description: 'كل فريق في الحاضنة يمرّ بالمسار نفسه، ويخرج من كل محطة بشيء ملموس يبني عليه ما بعدها.',
 } as const;
@@ -134,6 +133,12 @@ export const PROGRAMS = {
   eyebrow: 'البرامج',
   title: 'برامج الاحتضان والتدريب',
   description: 'اختر ما يناسبك اليوم، وانتقل إلى البرنامج التالي متى كنت جاهزاً.',
+  /** Live list under the program types; hidden when nothing is open. */
+  open: {
+    title: 'التسجيل مفتوح الآن',
+    description: 'برامج تستقبل طلبات الانضمام في هذه اللحظة.',
+    cta: 'التفاصيل والتقديم',
+  },
   items: [
     {
       type: ProgramType.INCUBATOR_BATCH,

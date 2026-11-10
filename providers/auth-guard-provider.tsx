@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { authService } from '@/services/auth-service';
@@ -35,7 +35,6 @@ type SessionStatus = 'pending' | 'anonymous' | 'authenticated' | 'unreachable';
 export default function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -87,8 +86,10 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     if (authFailed) logout();
   }, [authFailed, logout]);
 
-  const search = searchParams.toString();
-  const currentUrl = search ? `${pathname}?${search}` : pathname;
+  // Not useSearchParams: it would suspend prerendering, so public pages would ship the Suspense
+  // fallback instead of their content. Status stays 'pending' on the server and through hydration.
+  const search = status === 'pending' ? '' : window.location.search;
+  const currentUrl = `${pathname}${search}`;
   const role = status === 'authenticated' ? (sessionUser?.globalRole ?? null) : null;
 
   let redirectTo: string | null = null;
@@ -98,7 +99,7 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
       // Coming back from the login page: honour a validated `?redirect=` target.
       redirectTo =
         decision.type === 'home' && role && isAuthRoute(pathname)
-          ? getSafeRedirect(searchParams.get(REDIRECT_PARAM), role)
+          ? getSafeRedirect(new URLSearchParams(search).get(REDIRECT_PARAM), role)
           : decision.redirectTo;
     }
   }
