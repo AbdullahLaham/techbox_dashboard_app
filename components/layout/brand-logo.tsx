@@ -1,17 +1,18 @@
 // components/layout/brand-logo.tsx
-import { Box } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 const markSizes = {
-  sm: 'rounded-xl p-2 [&_svg]:h-5 [&_svg]:w-5',
-  md: 'rounded-2xl p-2.5 [&_svg]:h-6 [&_svg]:w-6',
-  lg: 'rounded-2xl p-3 [&_svg]:h-8 [&_svg]:w-8',
+  sm: { box: 'h-9 w-9', px: '36px' },
+  md: { box: 'h-11 w-11', px: '44px' },
+  lg: { box: 'h-14 w-14', px: '56px' },
 } as const;
 
 export function BrandMark({ size = 'md', className }: { size?: keyof typeof markSizes; className?: string }) {
+  const { box, px } = markSizes[size];
   return (
-    <div className={cn('shrink-0 bg-gold text-navy-900 shadow-md', markSizes[size], className)} aria-hidden>
-      <Box className="stroke-[2.5]" />
+    <div className={cn('relative shrink-0 rounded-full shadow-md', box, className)} aria-hidden>
+      <Image src="/brand/techbox-mark.png" alt="" fill sizes={px} loading="eager" />
     </div>
   );
 }
