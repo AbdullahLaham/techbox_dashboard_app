@@ -2,35 +2,55 @@
 'use client';
 
 import { useState } from 'react';
-import { Activity, CheckCircle2, Clock, GraduationCap } from 'lucide-react';
-import { useLearnerOverview } from '@/hooks/use-dashboard';
+import { CalendarCheck, CheckCircle2, Clock, GraduationCap } from 'lucide-react';
+import { useLearnerHome } from '@/hooks/use-dashboard';
 import { useMyEnrollments } from '@/hooks/use-enrollments';
 import { useSession } from '@/hooks/use-session';
 import { KpiCard } from '@/components/dashboard/shared/kpi-card';
 import { Section } from '@/components/dashboard/shared/section';
 import { DashboardError, DashboardSkeleton } from '@/components/dashboard/shared/dashboard-states';
-import { DeadlineStatus, type KpiMetric, type LearnerOverview as LearnerOverviewData } from '@/types/dashboard';
-import { daysUntil } from '@/lib/format';
+import type { KpiMetric } from '@/types/dashboard';
+import type { HomeResponse } from '@/types/home.contract';
+import { formatNumber } from '@/lib/format';
 import { WelcomeBanner } from './welcome-banner';
-import { ActivityRateCard } from './activity-rate-card';
-import { EnrolledPrograms, isEnrollmentFinished } from './enrolled-programs';
-import type { MyEnrollment } from '@/types/api.contract';
-import { UpcomingDeadlines } from './upcoming-deadlines';
+import { WeeklyActivityCard } from './weekly-activity-card';
+import { EnrolledPrograms } from './enrolled-programs';
+import { UpcomingAssignments } from './upcoming-deadlines';
 
-/** Programs and lessons come from the learner's enrollments; deadlines and activity are still fixtures. */
-function buildLearnerKpis(data: LearnerOverviewData, enrollments: readonly MyEnrollment[], now: number): KpiMetric[] {
-  const withAccess = enrollments.filter((e) => e.status === 'ACTIVE' || e.status === 'COMPLETED');
-  const finished = withAccess.filter(isEnrollmentFinished).length;
-  const active = withAccess.length - finished;
-  const completedLessons = withAccess.reduce((sum, e) => sum + e.completedLessons, 0);
-  const open = data.deadlines.filter((d) => d.status !== DeadlineStatus.SUBMITTED);
-  const dueThisWeek = open.filter((d) => daysUntil(d.dueAt, now) <= 7).length;
-
+/** Every number comes from GET /v1/home, the same feed as the mobile Home tab. */
+function buildLearnerKpis(home: HomeResponse): KpiMetric[] {
+  const { stats, assignments, weeklyActivity } = home;
   return [
-    { id: 'programs', label: 'البرامج النشطة', value: active, format: 'number', delta: finished, deltaLabel: 'برنامج مكتمل' },
-    { id: 'pending', label: 'مهام بانتظار التسليم', value: open.length, format: 'number', delta: dueThisWeek, deltaLabel: 'تستحق هذا الأسبوع', higherIsBetter: false },
-    { id: 'lessons', label: 'الدروس المكتملة', value: completedLessons, format: 'number', deltaLabel: 'عبر جميع البرامج' },
-    { id: 'activity', label: 'معدل النشاط', value: data.activity.rate, format: 'percent', delta: data.activity.rate - data.activity.previousRate, deltaLabel: 'عن الشهر الماضي' },
+    {
+      id: 'programs',
+      label: 'البرامج النشطة',
+      value: stats.activePrograms,
+      format: 'number',
+      deltaLabel: `${formatNumber(stats.completedPrograms)} برنامج مكتمل`,
+    },
+    {
+      id: 'pending',
+      label: 'واجبات بانتظار التسليم',
+      value: assignments.todoCount,
+      format: 'number',
+      deltaLabel:
+        assignments.overdueCount > 0 ? `${formatNumber(assignments.overdueCount)} منها متأخر` : 'لا واجبات متأخرة',
+      higherIsBetter: false,
+    },
+    {
+      id: 'lessons',
+      label: 'الدروس المكتملة',
+      value: stats.completedLessons,
+      format: 'number',
+      deltaLabel: `من أصل ${formatNumber(stats.totalLessons)} درساً إلزامياً`,
+    },
+    {
+      id: 'activity',
+      label: 'أيام التعلّم هذا الأسبوع',
+      value: weeklyActivity.activeDaysCount,
+      format: 'number',
+      deltaLabel: 'من 7 أيام',
+    },
   ];
 }
 
@@ -38,37 +58,41 @@ const KPI_ICONS = {
   programs: GraduationCap,
   pending: Clock,
   lessons: CheckCircle2,
-  activity: Activity,
+  activity: CalendarCheck,
 } as const;
 
 export function LearnerOverview() {
-  const overview = useLearnerOverview();
+  const home = useLearnerHome();
   const enrollments = useMyEnrollments();
   const { user } = useSession();
   // Frozen per mount so greetings, relative dates and urgency badges stay consistent.
   const [now] = useState(() => Date.now());
 
-  if (overview.isPending || enrollments.isPending) return <DashboardSkeleton />;
-  if (overview.isError || enrollments.isError) {
+  if (home.isPending || enrollments.isPending) return <DashboardSkeleton />;
+  if (home.isError || enrollments.isError) {
     return (
       <DashboardError
         onRetry={() => {
-          if (overview.isError) void overview.refetch();
+          if (home.isError) void home.refetch();
           if (enrollments.isError) void enrollments.refetch();
         }}
       />
     );
   }
 
-  const data = overview.data;
-  const kpis = buildLearnerKpis(data, enrollments.data, now);
+  const data = home.data;
 
   return (
     <div className="space-y-8 pb-10">
-      <WelcomeBanner firstName={user?.firstName} activityRate={data.activity.rate} startup={data.startup} now={now} />
+      <WelcomeBanner
+        firstName={user?.firstName}
+        activeDaysThisWeek={data.weeklyActivity.activeDaysCount}
+        continueLearning={data.continueLearning}
+        now={now}
+      />
 
       <section aria-label="ملخص التقدّم" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((metric) => (
+        {buildLearnerKpis(data).map((metric) => (
           <KpiCard key={metric.id} metric={metric} icon={KPI_ICONS[metric.id as keyof typeof KPI_ICONS]} />
         ))}
       </section>
@@ -84,11 +108,11 @@ export function LearnerOverview() {
         </Section>
 
         <div className="space-y-8">
-          <Section title="معدل النشاط">
-            <ActivityRateCard activity={data.activity} />
+          <Section title="نشاطي هذا الأسبوع">
+            <WeeklyActivityCard activity={data.weeklyActivity} />
           </Section>
-          <Section title="المواعيد النهائية القادمة">
-            <UpcomingDeadlines deadlines={data.deadlines} now={now} />
+          <Section title="واجبات بانتظار التسليم" action={{ label: 'كل الواجبات', href: '/assignments' }}>
+            <UpcomingAssignments items={data.assignments.upcoming} todoCount={data.assignments.todoCount} now={now} />
           </Section>
         </div>
       </div>

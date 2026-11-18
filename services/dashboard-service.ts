@@ -1,26 +1,29 @@
 // services/dashboard-service.ts
 import { apiClient } from '@/services/auth-service';
-import { buildAdminOverviewMock, buildLearnerOverviewMock } from '@/lib/mocks/dashboard';
-import type { AdminOverview, LearnerOverview } from '@/types/dashboard';
+import { localTimeZone } from '@/lib/assignment-format';
+import { ADMIN_OVERVIEW_ENDPOINT, type AdminOverviewResponse } from '@/types/admin-overview.contract';
+import { HOME_ENDPOINT, type HomeResponse } from '@/types/home.contract';
 
-/**
- * The aggregate dashboard endpoints are not live on the backend yet. Until they are,
- * typed fixtures are served. Set NEXT_PUBLIC_DASHBOARD_MOCKS=false to hit the API.
- * The learner's programs and lesson progress are real already: they come from
- * GET /v1/enrollments/my-enrollments (useMyEnrollments), not from this overview.
- */
-const USE_MOCKS = process.env.NEXT_PUBLIC_DASHBOARD_MOCKS !== 'false';
+function browserTimeZone(): string | undefined {
+  try {
+    return localTimeZone() || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
+/** The two home pages. Every number is counted by the API; nothing is generated here. */
 export const dashboardService = {
-  async getAdminOverview(): Promise<AdminOverview> {
-    if (USE_MOCKS) return buildAdminOverviewMock();
-    const res = await apiClient.get<AdminOverview>('/dashboard/admin/overview');
+  /** Staff home page. */
+  async getAdminOverview(): Promise<AdminOverviewResponse> {
+    const res = await apiClient.get<AdminOverviewResponse>(ADMIN_OVERVIEW_ENDPOINT);
     return res.data;
   },
 
-  async getLearnerOverview(): Promise<LearnerOverview> {
-    if (USE_MOCKS) return buildLearnerOverviewMock();
-    const res = await apiClient.get<LearnerOverview>('/dashboard/me');
+  /** Learner home page: the same feed as the mobile Home tab, with weekdays in the viewer's timezone. */
+  async getLearnerHome(): Promise<HomeResponse> {
+    const tz = browserTimeZone();
+    const res = await apiClient.get<HomeResponse>(HOME_ENDPOINT, { params: tz ? { tz } : undefined });
     return res.data;
   },
 };

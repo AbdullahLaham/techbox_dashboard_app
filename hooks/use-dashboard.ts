@@ -9,6 +9,7 @@ export const dashboardKeys = {
   learner: (userId: string | undefined) => ['dashboard', 'learner', userId] as const,
 };
 
+/** GET /v1/admin/overview */
 export function useAdminOverview() {
   return useQuery({
     queryKey: dashboardKeys.admin,
@@ -17,11 +18,12 @@ export function useAdminOverview() {
   });
 }
 
-export function useLearnerOverview() {
+/** GET /v1/home */
+export function useLearnerHome() {
   const userId = useAuthStore((s) => s.user?.id);
   return useQuery({
     queryKey: dashboardKeys.learner(userId),
-    queryFn: dashboardService.getLearnerOverview,
+    queryFn: dashboardService.getLearnerHome,
     enabled: !!userId,
     staleTime: 1000 * 60,
   });

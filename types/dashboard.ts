@@ -1,5 +1,7 @@
 // types/dashboard.ts
-import type { NodeType } from './program';
+// UI types shared by the dashboard home pages. The data itself comes from the API:
+// staff home = GET /v1/admin/overview (types/admin-overview.contract.ts),
+// learner home = GET /v1/home (types/home.contract.ts).
 
 /** ISO-8601 timestamp string as returned by the API. */
 export type IsoDateString = string;
@@ -21,77 +23,11 @@ export interface KpiMetric {
   higherIsBetter?: boolean;
 }
 
-// ───────────────────────── Admin overview ─────────────────────────
-
+/** Stages of an incubated startup. Used by the landing page; there is no startup data in the API yet. */
 export enum StartupStage {
   IDEATION = 'IDEATION',
   VALIDATION = 'VALIDATION',
   MVP = 'MVP',
   GROWTH = 'GROWTH',
   INVESTMENT_READY = 'INVESTMENT_READY',
-}
-
-export interface StageCount {
-  stage: StartupStage;
-  count: number;
-}
-
-export interface CohortHealth {
-  id: string;
-  name: string;
-  /** 0–100 */
-  progress: number;
-  activeStartups: number;
-  atRiskStartups: number;
-}
-
-export interface AdminOverview {
-  kpis: KpiMetric[];
-  pipeline: StageCount[];
-  cohorts: CohortHealth[];
-  /** 0–100: share of mentor capacity currently booked. */
-  mentorUtilization: number;
-}
-
-// ───────────────────────── Learner overview ─────────────────────────
-
-export interface DailyActivity {
-  date: IsoDateString;
-  minutes: number;
-}
-
-export interface ActivitySummary {
-  /** 0–100: share of scheduled activities completed on time this month. */
-  rate: number;
-  previousRate: number;
-  streakDays: number;
-  weekly: DailyActivity[];
-}
-
-export enum DeadlineStatus {
-  NOT_STARTED = 'NOT_STARTED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  SUBMITTED = 'SUBMITTED',
-}
-
-export interface UpcomingDeadline {
-  id: string;
-  title: string;
-  programTitle: string;
-  programSlug: string;
-  type: NodeType;
-  dueAt: IsoDateString;
-  status: DeadlineStatus;
-}
-
-export interface LearnerStartupSnapshot {
-  name: string;
-  stage: StartupStage;
-  nextMentorSessionAt?: IsoDateString;
-}
-
-export interface LearnerOverview {
-  activity: ActivitySummary;
-  deadlines: UpcomingDeadline[];
-  startup?: LearnerStartupSnapshot;
 }
