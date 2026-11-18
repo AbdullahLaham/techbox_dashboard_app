@@ -1,23 +1,18 @@
 // config/navigation.ts
 import type { LucideIcon } from 'lucide-react';
 import {
-  Award,
   BookOpen,
   ClipboardList,
   FileCheck,
-  FolderKanban,
   GraduationCap,
-  HelpCircle,
   LayoutDashboard,
   LogIn,
-  Settings,
   ShieldCheck,
-  Sparkles,
   UserCheck,
   Users,
 } from 'lucide-react';
 import { GlobalRole } from '@/types';
-import { ALL_ROLES, canAccessRoute, isStaffRole } from '@/lib/auth/rbac';
+import { canAccessRoute, isStaffRole } from '@/lib/auth/rbac';
 
 export interface NavItem {
   title: string;
@@ -39,6 +34,12 @@ export interface NavSection {
 
 const LEARNER_AUDIENCE = [GlobalRole.STUDENT, GlobalRole.GUEST] as const;
 
+/*
+ * Not linked until they are built (each page only says "coming soon"): /admin/startups,
+ * /admin/settings, /certificates, /my-startup and /support. Their routes and role rules stay in
+ * lib/auth/rbac.ts, so adding a link back is all it takes once a page is ready.
+ */
+
 const NAV_SECTIONS: readonly NavSection[] = [
   {
     id: 'admin-main',
@@ -52,12 +53,9 @@ const NAV_SECTIONS: readonly NavSection[] = [
     ],
   },
   {
-    id: 'admin-incubator',
-    title: 'الحاضنة',
-    items: [
-      { title: 'الشركات الناشئة والمشاريع', href: '/admin/startups', icon: FolderKanban },
-      { title: 'المستخدمون والصلاحيات', href: '/admin/users', icon: Users },
-    ],
+    id: 'admin-people',
+    title: 'الفريق والمستخدمون',
+    items: [{ title: 'المستخدمون والصلاحيات', href: '/admin/users', icon: Users }],
   },
   {
     id: 'learner-main',
@@ -66,13 +64,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
       { title: 'لوحتي الشخصية', href: '/dashboard', icon: LayoutDashboard },
       { title: 'واجباتي', href: '/assignments', icon: ClipboardList },
       { title: 'دليل البرامج والدورات', href: '/programs', icon: GraduationCap, audience: LEARNER_AUDIENCE },
-      { title: 'شهاداتي وإنجازاتي', href: '/certificates', icon: Award },
     ],
-  },
-  {
-    id: 'learner-incubator',
-    title: 'الحاضنة',
-    items: [{ title: 'مشروعي الناشئ', href: '/my-startup', icon: Sparkles, badge: 'مستشار AI' }],
   },
   {
     id: 'public',
@@ -81,14 +73,6 @@ const NAV_SECTIONS: readonly NavSection[] = [
       { title: 'استكشاف البرامج', href: '/programs', icon: GraduationCap, audience: 'anonymous' },
       { title: 'عن حاضنة TechBox', href: '/about', icon: ShieldCheck, audience: 'anonymous' },
       { title: 'تسجيل الدخول', href: '/login', icon: LogIn, audience: 'anonymous' },
-    ],
-  },
-  {
-    id: 'system',
-    title: 'النظام',
-    items: [
-      { title: 'إعدادات المنصة', href: '/admin/settings', icon: Settings },
-      { title: 'الدعم والمساعدة', href: '/support', icon: HelpCircle, audience: ALL_ROLES },
     ],
   },
 ];
@@ -127,9 +111,7 @@ export const ADMIN_QUICK_ACTIONS: readonly QuickAction[] = [
   { title: 'برنامج جديد', description: 'أنشئ مساراً تعليمياً أو دفعة احتضان', href: '/admin/content', icon: BookOpen },
   { title: 'واجب جديد', description: 'أنشئ واجباً وأرفق ملفات التعليمات', href: '/admin/assignments/new', icon: ClipboardList },
   { title: 'قائمة التقييم', description: 'راجع التسليمات المعلقة', href: '/admin/grading', icon: FileCheck },
-  { title: 'متابعة الشركات', description: 'حدّث مراحل المشاريع الناشئة', href: '/admin/startups', icon: FolderKanban },
   { title: 'إدارة المستخدمين', description: 'أنشئ حسابات الفريق وأسند الأدوار', href: '/admin/users', icon: Users },
-  { title: 'إعدادات المنصة', description: 'الصلاحيات والتكاملات', href: '/admin/settings', icon: Settings },
 ];
 
 export function getQuickActions(role: GlobalRole | null): QuickAction[] {
