@@ -26,6 +26,16 @@ Sign in with an account created by the backend's `npm run seed` (owner / incubat
 
 In production the backend must list this app's URL in its `CORS_ORIGINS`.
 
+`NEXT_PUBLIC_*` values are baked in at build time, so set them on the host before `npm run build`:
+
+| Variable | Required | Used for |
+|----------|----------|----------|
+| `NEXT_PUBLIC_API_URL` | yes | The API's https address |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | for launch | Contact on `/privacy`, `/terms`, `/delete-account` |
+| `NEXT_PUBLIC_SUPPORT_WHATSAPP` | optional | Same pages; digits in international format, e.g. `970599000000` |
+
+The legal pages (`app/(legal)/`) are a first draft; see `lib/legal.ts` before changing them.
+
 ## Scripts
 
 | Command | What it does |

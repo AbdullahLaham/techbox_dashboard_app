@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { ArrowUpLeft, Link2, MapPin } from 'lucide-react';
 import { BrandMark } from '@/components/layout/brand-logo';
+import { LEGAL_PAGES } from '@/lib/legal';
 import { cn } from '@/lib/utils';
 import { CONTACT, NAV_LINKS } from './content';
 import { InstagramGlyph } from './instagram-glyph';
@@ -89,7 +90,7 @@ export function SiteFooter() {
           </ul>
         </Reveal>
 
-        <div className="mt-16 grid gap-12 border-t border-navy-900/[0.08] pt-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
+        <div className="mt-16 grid gap-12 border-t border-navy-900/[0.08] pt-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div className="space-y-5 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <BrandMark size="sm" />
@@ -112,6 +113,16 @@ export function SiteFooter() {
 
           <FooterColumn title="المنصة">
             {PLATFORM_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className={LINK_CLASS}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
+
+          <FooterColumn title="الخصوصية والشروط">
+            {LEGAL_PAGES.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={LINK_CLASS}>
                   {link.label}

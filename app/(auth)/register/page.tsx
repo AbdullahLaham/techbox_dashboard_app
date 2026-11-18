@@ -125,6 +125,18 @@ export default function RegisterPage() {
         >
           {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'إنشاء الحساب'}
         </button>
+
+        <p className="text-center text-xs leading-6 text-muted-foreground">
+          بإنشاء حساب فإنك توافق على{' '}
+          <Link href="/terms" target="_blank" className="font-semibold text-gold hover:underline">
+            شروط الاستخدام
+          </Link>{' '}
+          و
+          <Link href="/privacy" target="_blank" className="font-semibold text-gold hover:underline">
+            سياسة الخصوصية
+          </Link>
+          .
+        </p>
       </form>
 
       <div className="text-center text-sm text-muted-foreground">

@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { isAuthRoute } from '@/lib/auth/rbac';
+import { isLegalRoute } from '@/lib/legal';
 import { useUiStore } from '@/store/use-ui-store';
 import { AppSidebar } from './sidebar';
 import { AppHeader } from './header';
@@ -23,6 +24,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   // صفحة الهبوط تحمل رأسها وتذييلها الخاصين
   if (pathname === '/') return <>{children}</>;
+
+  // Privacy, terms and account deletion: public reading pages with their own header.
+  if (isLegalRoute(pathname)) return <>{children}</>;
 
   // صفحات الدخول والتسجيل تعرض بدون الشريط الجانبي والهيدر
   if (isAuthRoute(pathname)) {
