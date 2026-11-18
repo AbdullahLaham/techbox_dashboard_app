@@ -72,6 +72,11 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* No self-service reset yet (no email service): staff reset passwords from /admin/users. */}
+        <p className="-mt-1 text-xs text-muted-foreground">
+          نسيت كلمة المرور؟ تواصل مع إدارة حاضنة TechBox لإعادة تعيينها.
+        </p>
+
         <button
           type="submit"
           disabled={loginMutation.isPending}
