@@ -1,0 +1,7 @@
+# Not uploaded by `vercel deploy`: Vercel installs and builds on its side.
+node_modules
+.next
+.agents
+.claude
+skills-lock.json
+.env*
